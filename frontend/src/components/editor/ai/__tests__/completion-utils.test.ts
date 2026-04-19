@@ -425,6 +425,14 @@ describe("codeToCells", () => {
     expect(result).toEqual([{ language: "sql", code: "SELECT * FROM users" }]);
   });
 
+  it("should handle shell language aliases", () => {
+    for (const language of ["sh", "shell", "bash"]) {
+      const code = `\`\`\`${language}\necho hello\n\`\`\``;
+      const result = codeToCells(code);
+      expect(result).toEqual([{ language: "shell", code: "echo hello" }]);
+    }
+  });
+
   it("should handle unclosed markdown cell", () => {
     const code = "```markdown\n# Hello, world!\n";
     const result = codeToCells(code);

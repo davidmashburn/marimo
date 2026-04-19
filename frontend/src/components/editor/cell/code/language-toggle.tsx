@@ -1,7 +1,7 @@
 /* Copyright 2026 Marimo. All rights reserved. */
 
 import type { EditorView } from "@codemirror/view";
-import { DatabaseIcon } from "lucide-react";
+import { DatabaseIcon, TerminalIcon } from "lucide-react";
 import type React from "react";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,14 +16,18 @@ interface LanguageTogglesProps {
   editorView: EditorView | null;
   code: string;
   currentLanguageAdapter: LanguageAdapter["type"] | undefined;
-  onAfterToggle: () => void;
+  onAfterToggleMarkdown: () => void;
+  onAfterToggleSQL: () => void;
+  onAfterToggleShell: () => void;
 }
 
 export const LanguageToggles: React.FC<LanguageTogglesProps> = ({
   editorView,
   code,
   currentLanguageAdapter,
-  onAfterToggle,
+  onAfterToggleMarkdown,
+  onAfterToggleSQL,
+  onAfterToggleShell,
 }) => {
   const canUseMarkdown = useMemo(
     () => LanguageAdapters.markdown.isSupported(code) || code.trim() === "",
@@ -31,6 +35,10 @@ export const LanguageToggles: React.FC<LanguageTogglesProps> = ({
   );
   const canUseSQL = useMemo(
     () => LanguageAdapters.sql.isSupported(code) || code.trim() === "",
+    [code],
+  );
+  const canUseShell = useMemo(
+    () => LanguageAdapters.shell.isSupported(code) || code.trim() === "",
     [code],
   );
 
@@ -49,7 +57,24 @@ export const LanguageToggles: React.FC<LanguageTogglesProps> = ({
         }
         toType="sql"
         displayName="SQL"
-        onAfterToggle={onAfterToggle}
+        onAfterToggle={onAfterToggleSQL}
+      />
+      <LanguageToggle
+        editorView={editorView}
+        currentLanguageAdapter={currentLanguageAdapter}
+        canSwitchToLanguage={
+          canUseShell && currentLanguageAdapter === "python"
+        }
+        icon={
+          <TerminalIcon
+            color={"var(--sky-11)"}
+            strokeWidth={2.5}
+            className="w-4 h-4"
+          />
+        }
+        toType="shell"
+        displayName="Shell"
+        onAfterToggle={onAfterToggleShell}
       />
       <LanguageToggle
         editorView={editorView}
@@ -66,7 +91,7 @@ export const LanguageToggles: React.FC<LanguageTogglesProps> = ({
         }
         toType="markdown"
         displayName="Markdown"
-        onAfterToggle={onAfterToggle}
+        onAfterToggle={onAfterToggleMarkdown}
       />
       <LanguageToggle
         editorView={editorView}

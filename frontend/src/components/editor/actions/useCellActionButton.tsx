@@ -20,6 +20,7 @@ import {
   PlusCircleIcon,
   ScissorsIcon,
   SparklesIcon,
+  TerminalIcon,
   TextCursorInputIcon,
   Trash2Icon,
   XCircleIcon,
@@ -270,6 +271,38 @@ export function useCellActionButtons({ cell, closePopover }: Props) {
               });
               switchLanguage(editorView, {
                 language: "sql",
+                keepCodeAsIs: false,
+              });
+            },
+            hidden: isSetupCell,
+          },
+      getCurrentLanguageAdapter(getEditorView()) === "shell"
+        ? {
+            icon: <PythonIcon />,
+            label: "View as Python",
+            handle: () => {
+              const editorView = getEditorView();
+              if (!editorView) {
+                return;
+              }
+              toggleToLanguage(editorView, "python", { force: true });
+            },
+            hidden: isSetupCell,
+          }
+        : {
+            icon: <TerminalIcon size={13} strokeWidth={1.5} />,
+            label: "Convert to Shell",
+            handle: () => {
+              const editorView = getEditorView();
+              if (!editorView) {
+                return;
+              }
+              maybeAddMarimoImport({
+                autoInstantiate,
+                createNewCell: createCell,
+              });
+              switchLanguage(editorView, {
+                language: "shell",
                 keepCodeAsIs: false,
               });
             },

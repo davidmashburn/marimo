@@ -22,6 +22,7 @@ import {
   ChevronsUpDown,
   DatabaseIcon,
   SparklesIcon,
+  TerminalIcon,
   XIcon,
 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
@@ -75,7 +76,7 @@ import {
 import { StreamingChunkTransport } from "./transport/chat-transport";
 
 // Persist across sessions
-const languageAtom = atomWithStorage<"python" | "sql">(
+const languageAtom = atomWithStorage<"python" | "sql" | "shell">(
   "marimo:ai-language",
   "python",
   jotaiJsonStorage,
@@ -200,13 +201,27 @@ export const AddCellWithAI: React.FC<{
     </>
   );
 
+  const shellIcon = (
+    <>
+      <TerminalIcon className="size-4 mr-2" />
+      Shell
+    </>
+  );
+
+  const languageIcon =
+    language === "python"
+      ? pythonIcon
+      : language === "sql"
+        ? sqlIcon
+        : shellIcon;
+
   const languageDropdown = (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         className="flex items-center justify-between h-7 text-xs px-2 py-0.5 border rounded-md hover:text-accent-foreground"
         data-testid="language-button"
       >
-        {language === "python" ? pythonIcon : sqlIcon}
+        {languageIcon}
         <ChevronsUpDown className="ml-1 h-3.5 w-3.5 text-muted-foreground/70" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center">
@@ -219,6 +234,9 @@ export const AddCellWithAI: React.FC<{
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setLanguage("sql")}>
           {sqlIcon}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setLanguage("shell")}>
+          {shellIcon}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

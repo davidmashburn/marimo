@@ -1081,6 +1081,7 @@ chart
 ## Rules for inserting cells:
 For markdown cells, use `mo.md(f"""{content}""")`
 For sql cells, use `mo.sql(f"""{content}""")`. If a database engine is specified, use `mo.sql(f"""{content}""", engine=engine)` instead.
+For shell cells, use `mo.sh(r"""{content}""")`
 
 
 ==================== kitchen sink ====================

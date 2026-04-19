@@ -30,6 +30,7 @@
     "marimo",
     "parser",
     "markdown",
+    "shell",
     "sql",
     "python"
   ],

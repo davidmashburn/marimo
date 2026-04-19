@@ -3381,7 +3381,7 @@ export interface components {
        * @default python
        * @enum {unknown}
        */
-      language?: "markdown" | "python" | "sql";
+      language?: "markdown" | "python" | "shell" | "sql";
       prompt: string;
       /** @default null */
       selectedText?: string | null;
@@ -3438,7 +3438,7 @@ export interface components {
        * @default python
        * @enum {unknown}
        */
-      language?: "markdown" | "python" | "sql";
+      language?: "markdown" | "python" | "shell" | "sql";
       prefix: string;
       suffix: string;
     };

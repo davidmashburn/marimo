@@ -14,7 +14,7 @@ FIM_PREFIX_TAG = "<|fim_prefix|>"
 FIM_SUFFIX_TAG = "<|fim_suffix|>"
 FIM_MIDDLE_TAG = "<|fim_middle|>"
 
-LANGUAGES: list[Language] = ["python", "sql", "markdown"]
+LANGUAGES: list[Language] = ["python", "sql", "markdown", "shell"]
 language_rules: dict[Language, list[str]] = {
     "python": [
         "For matplotlib: use plt.gca() as the last expression instead of plt.show().",
@@ -119,6 +119,7 @@ def get_refactor_or_insert_notebook_cell_system_prompt(
             "```python\n{PYTHON_CODE}\n```\n\n"
             '```sql\ndf_name = mo.sql(f"""{SQL_QUERY}""")\n```\n\n'
             '```markdown\nmo.md(f"""{MARKDOWN_CONTENT}""")\n```\n\n'
+            '```shell\nmo.sh(r"""{SHELL_SCRIPT}""")\n```\n\n'
             "You can have multiple cells of any type. Each cell is wrapped in backticks with the appropriate language identifier.\n"
             "Create clear variable names if they will be used in other cells. Do not prefix with underscore.\n"
             "Separate logic into multiple cells to keep the code organized and readable."
@@ -205,7 +206,7 @@ def get_refactor_or_insert_notebook_cell_system_prompt(
         )
 
     if support_multiple_cells:
-        system_prompt += "\n\nAgain, just output code wrapped in cells. Each cell is wrapped in backticks with the appropriate language identifier (python, sql, markdown)."
+        system_prompt += "\n\nAgain, just output code wrapped in cells. Each cell is wrapped in backticks with the appropriate language identifier (python, sql, markdown, shell)."
     else:
         system_prompt += f"\n\nAgain, just output the code itself and make sure to return the code as just {language}."
 
@@ -415,6 +416,7 @@ chart
         system_prompt += "\n\n## Rules for inserting cells:\n"
         system_prompt += 'For markdown cells, use `mo.md(f"""{content}""")`\n'
         system_prompt += 'For sql cells, use `mo.sql(f"""{content}""")`. If a database engine is specified, use `mo.sql(f"""{content}""", engine=engine)` instead.\n'
+        system_prompt += 'For shell cells, use `mo.sh(r"""{content}""")`\n'
     else:
         for language in language_rules:
             if len(language_rules[language]) == 0:

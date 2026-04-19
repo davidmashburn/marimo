@@ -86,6 +86,11 @@ describe("getInitialLanguageAdapter", () => {
     const state = createState("df = mo.sql('hello')");
     expect(getInitialLanguageAdapter(state).type).toBe("sql");
   });
+
+  it("should return shell", () => {
+    const state = createState("mo.sh('echo hello')");
+    expect(getInitialLanguageAdapter(state).type).toBe("shell");
+  });
 });
 
 describe("switchLanguage", () => {
@@ -221,6 +226,27 @@ describe("switchLanguage", () => {
 
     // Check that the document was transformed correctly
     expect(mockEditor.state.doc.toString()).toEqual("SELECT * FROM df");
+  });
+
+  it("sets default metadata when switching from Python to Shell", () => {
+    const state = createState("echo hello");
+    const mockEditor = createEditorView(state);
+
+    switchLanguage(mockEditor, { language: "shell", keepCodeAsIs: false });
+
+    expect(mockEditor.state.field(languageAdapterState).type).toBe("shell");
+    expect(mockEditor.state.field(languageMetadataField)).toEqual({
+      kwargs: [],
+      quotePrefix: "r",
+      resultName: null,
+    });
+    expect(mockEditor.state.doc.toString()).toBe("echo hello");
+
+    switchLanguage(mockEditor, { language: "python", keepCodeAsIs: false });
+
+    expect(mockEditor.state.doc.toString()).toBe(
+      'mo.sh(r"""\necho hello\n""")',
+    );
   });
 
   it("handle when switching from Python to Markdown with keepCodeAsIs true", () => {
