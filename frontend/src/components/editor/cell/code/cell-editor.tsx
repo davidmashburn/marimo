@@ -485,7 +485,6 @@ const CellEditorInternal = ({
               currentLanguageAdapter={languageAdapter}
               onAfterToggleMarkdown={afterToggleMarkdown}
               onAfterToggleSQL={afterToggleSQL}
-              onAfterToggleShell={afterToggleSQL}
             />
           </div>
         )}

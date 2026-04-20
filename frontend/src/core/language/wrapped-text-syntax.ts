@@ -1,0 +1,41 @@
+/* Copyright 2026 Marimo. All rights reserved. */
+
+export const WRAPPED_TEXT_SYNTAX_LANGUAGES = [
+  "bash",
+  "sh",
+  "shell",
+  "css",
+  "scss",
+  "less",
+  "dockerfile",
+  "go",
+  "golang",
+  "html",
+  "javascript",
+  "js",
+  "json",
+  "markdown",
+  "md",
+  "mysql",
+  "postgres",
+  "postgresql",
+  "powershell",
+  "ps1",
+  "py",
+  "python",
+  "rb",
+  "ruby",
+  "rs",
+  "rust",
+  "sqlite",
+  "sql",
+  "toml",
+  "ts",
+  "typescript",
+  "xml",
+  "yaml",
+  "yml",
+] as const;
+
+export type WrappedTextSyntaxLanguage =
+  (typeof WRAPPED_TEXT_SYNTAX_LANGUAGES)[number];
