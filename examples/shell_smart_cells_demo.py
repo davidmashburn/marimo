@@ -180,5 +180,49 @@ def _(env_result, mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## JavaScript via `mo.node(...)`
+
+    This cell runs JavaScript directly through Node.js using a wrapped-text
+    call (`mo.node(...)`) so the smart-cell body can use JavaScript syntax.
+    """)
+    return
+
+
+@app.cell
+def _(mo):
+    node_result = mo.node(r"""
+    const payload = {
+      runtime: process.release.name,
+      version: process.version,
+      platform: process.platform,
+    };
+    console.log(JSON.stringify(payload));
+    """, check=False)
+    return
+
+
+app._unparsable_cell(
+    """
+    mo.md(f\"\"\"
+    `mo.node(...)` return code: `{node_result.returncode}`
+
+    stdout:
+    ```text
+    {(node_result.stdout or \"\\\").strip()}
+    ```
+
+    stderr:
+    ```text
+    {(node_result.stderr or \"\\\").strip()}
+    ```
+    \"\"\")
+    """,
+    name="_"
+)
+
+
 if __name__ == "__main__":
     app.run()

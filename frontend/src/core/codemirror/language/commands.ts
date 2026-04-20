@@ -2,7 +2,7 @@
 
 import type { EditorView } from "@codemirror/view";
 import { languageAdapterState, switchLanguage } from "./extension";
-import { LanguageAdapters } from "./LanguageAdapters";
+import { getLanguageAdapter } from "./LanguageAdapters";
 import type { LanguageAdapterType } from "./types";
 import { getEditorCodeAsPython } from "./utils";
 
@@ -35,7 +35,7 @@ function canToggleToLanguage(
     return true;
   }
 
-  return LanguageAdapters[language].isSupported(
+  return getLanguageAdapter(language).isSupported(
     getEditorCodeAsPython(editorView),
   );
 }
