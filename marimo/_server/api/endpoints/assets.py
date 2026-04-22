@@ -595,7 +595,15 @@ async def serve_public_file(request: Request) -> Response:
 @router.get("/{path:path}")
 async def serve_static(request: Request) -> FileResponse:
     path = str(request.path_params["path"])
-    if any(re.match(pattern, path) for pattern in STATIC_FILES):
-        return FileResponse(root / path)
+    if any(re.fullmatch(pattern, path) for pattern in STATIC_FILES):
+        file_path = Path(path)
+        try:
+            PathValidator().validate_inside_directory(root, file_path)
+        except Exception:
+            raise HTTPException(status_code=404, detail="Not Found") from None
+        resolved = root / path
+        if not resolved.is_file():
+            raise HTTPException(status_code=404, detail="Not Found")
+        return FileResponse(resolved)
 
     raise HTTPException(status_code=404, detail="Not Found")

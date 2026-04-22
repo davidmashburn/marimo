@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "marimo"
-version = "0.23.1"
+version = "0.23.2"
 description = "A library for making reactive notebooks and apps"
 # We try to keep dependencies to a minimum, to avoid conflicts with
 # user environments; we need a very compelling reason for each dependency added.
@@ -417,6 +417,7 @@ extend-select = [
     "D419",
     "PGH004", # Use specific rule codes when using noqa
     "PGH005", # Invalid unittest.mock.Mock methods/attributes/properties
+    "RUF006", # Store a reference to the return value of asyncio.create_task
     # "S101", # Checks use `assert` outside the test cases, test cases should be added into the exclusions
     "B004",   # Checks for use of hasattr(x, "__call__") and replaces it with callable(x)
     "B006",   # Checks for uses of mutable objects as function argument defaults.

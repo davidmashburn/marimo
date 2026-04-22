@@ -753,18 +753,35 @@ class TestPackages:
     async def test_list_errors_after_add(self, k: Kernel) -> None:
         """list() raises after add() has been called in the same batch."""
         with _ctx(k) as ctx:
-            async with ctx as nb:
-                nb.packages.add("pandas")
-                with pytest.raises(RuntimeError):
-                    nb.packages.list()
+            pm = k.packages_callbacks.package_manager
+            assert pm is not None
+
+            # Mock install: queued ops still run on context exit and would
+            # otherwise invoke `uv add pandas` against the test venv.
+            with patch.object(
+                pm, "install", new_callable=AsyncMock, return_value=True
+            ):
+                async with ctx as nb:
+                    nb.packages.add("pandas")
+                    with pytest.raises(RuntimeError):
+                        nb.packages.list()
 
     async def test_list_errors_after_remove(self, k: Kernel) -> None:
         """list() raises after remove() has been called in the same batch."""
         with _ctx(k) as ctx:
-            async with ctx as nb:
-                nb.packages.remove("pandas")
-                with pytest.raises(RuntimeError):
-                    nb.packages.list()
+            pm = k.packages_callbacks.package_manager
+            assert pm is not None
+
+            # Mock uninstall: queued ops still run on context exit and would
+            # otherwise invoke `uv remove pandas` against the test venv,
+            # triggering a `uv sync` that wipes every test-group package.
+            with patch.object(
+                pm, "uninstall", new_callable=AsyncMock, return_value=True
+            ):
+                async with ctx as nb:
+                    nb.packages.remove("pandas")
+                    with pytest.raises(RuntimeError):
+                        nb.packages.list()
 
     async def test_add_and_remove_in_same_batch(self, k: Kernel) -> None:
         """add and remove can coexist in the same batch, executed in order."""
@@ -1013,15 +1030,19 @@ class TestDocumentKernelDivergence:
 
 
 class TestErrorReporting:
-    async def test_print_summary_reports_cell_errors(
+    async def test_print_summary_does_not_duplicate_errors(
         self, k: Kernel, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        """_print_summary writes cell runtime errors to stderr."""
+        """_print_summary does not write cell errors to stderr.
+
+        Runtime errors are surfaced by ScratchCellListener via the done
+        event, not duplicated to stderr by _print_summary.
+        """
         with _ctx(k) as ctx:
             async with ctx as nb:
                 cid = nb.create_cell("raise ValueError('boom')")
                 nb.run_cell(cid)
 
         captured = capsys.readouterr()
-        assert "error in cell" in captured.err
-        assert "boom" in captured.err
+        assert "created and ran" in captured.out
+        assert "error in cell" not in captured.err
