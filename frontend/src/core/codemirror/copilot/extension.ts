@@ -28,6 +28,7 @@ import type { AiInlineCompletionRequest } from "@/core/kernel/messages";
 import { API } from "@/core/network/api";
 import { Logger } from "@/utils/Logger";
 import { languageAdapterState } from "../language/extension";
+import { asBuiltInLanguageAdapterType } from "../language/types";
 import { isInVimMode } from "../utils";
 import { COPILOT_FILENAME, copilotServer, getCopilotClient } from "./client";
 import { getCodes } from "./getCodes";
@@ -142,7 +143,7 @@ export const copilotBundle = (config: CompletionConfig): Extension => {
             return "";
           }
 
-          const language = state.field(languageAdapterState).type;
+          const language = asBuiltInLanguageAdapterType(state.field(languageAdapterState).type);
           let res = await API.post<AiInlineCompletionRequest, string>(
             "/ai/inline_completion",
             { prefix, suffix, language },

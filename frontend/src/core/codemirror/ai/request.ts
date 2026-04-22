@@ -3,7 +3,7 @@
 import { waitForConnectionOpen } from "@/core/network/connection";
 import type { AiCompletionRequest } from "@/core/network/types";
 import { getRuntimeManager } from "@/core/runtime/config";
-import type { LanguageAdapterType } from "../language/types";
+import type { BuiltInLanguageAdapterType } from "../language/types";
 
 /**
  * Request to edit code with AI
@@ -13,7 +13,7 @@ export async function requestEditCompletion(opts: {
   selection: string;
   codeBefore: string;
   codeAfter: string;
-  language: LanguageAdapterType;
+  language: BuiltInLanguageAdapterType;
 }): Promise<string> {
   // TODO: maybe include other code
   // const otherCodes = getCodes(currentCode);

@@ -62,6 +62,7 @@ import { goToDefinitionBundle } from "./go-to-definition/extension";
 import { keymapBundle } from "./keymaps/keymaps";
 import { getCurrentLanguageAdapter } from "./language/commands";
 import { adaptiveLanguageConfiguration } from "./language/extension";
+import { asBuiltInLanguageAdapterType } from "./language/types";
 import { dndBundle } from "./misc/dnd";
 import { pasteBundle } from "./misc/paste";
 import { stringsAutoCloseBraces } from "./misc/string-braces";
@@ -139,7 +140,7 @@ export const setupCodeMirror = (opts: CodeMirrorSetupOpts): Extension[] => {
                 selection: req.selection,
                 codeBefore: req.codeBefore,
                 codeAfter: req.codeAfter,
-                language: getCurrentLanguageAdapter(req.editorView),
+                language: asBuiltInLanguageAdapterType(getCurrentLanguageAdapter(req.editorView)),
               });
             },
           }),

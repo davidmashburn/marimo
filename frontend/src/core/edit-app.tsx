@@ -28,7 +28,9 @@ import {
   numColumnsAtom,
   useCellActions,
 } from "./cells/cells";
-import type { AppConfig, UserConfig } from "./config/config-schema";
+import type { AppConfig, UserConfig, WrappedTextAdapterConfig } from "./config/config-schema";
+import { resolvedMarimoConfigAtom } from "./config/config";
+import { syncUserWrappedTextAdapters } from "./codemirror/language/user-wrapped-text-adapters";
 import { RuntimeState } from "./kernel/RuntimeState";
 import { getSessionId } from "./kernel/session";
 import { useTogglePresenting } from "./layout/useTogglePresenting";
@@ -66,6 +68,7 @@ export const EditApp: React.FC<AppProps> = ({
   const filename = useFilename();
   const setLastSavedNotebook = useSetAtom(lastSavedNotebookAtom);
   const { sendComponentValues, sendInterrupt } = useRequestClient();
+  const resolvedConfig = useAtomValue(resolvedMarimoConfigAtom);
 
   const isEditing = viewState.mode === "edit";
   const isPresenting = viewState.mode === "present";
@@ -78,6 +81,13 @@ export const EditApp: React.FC<AppProps> = ({
       RuntimeState.INSTANCE.stop();
     };
   }, []);
+
+  useEffect(() => {
+    syncUserWrappedTextAdapters(
+      (resolvedConfig.runtime as { wrapped_text_adapters?: WrappedTextAdapterConfig[] })
+        .wrapped_text_adapters,
+    );
+  }, [resolvedConfig.runtime]);
 
   const { connection } = useMarimoKernelConnection({
     autoInstantiate: userConfig.runtime.auto_instantiate,

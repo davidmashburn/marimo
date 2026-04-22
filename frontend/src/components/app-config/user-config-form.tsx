@@ -58,6 +58,7 @@ import { ExternalLink } from "../ui/links";
 import { Tooltip } from "../ui/tooltip";
 import { AiConfig } from "./ai-config";
 import { formItemClasses, SettingGroup } from "./common";
+import { WrappedTextAdaptersForm } from "./wrapped-text-adapters-form";
 import { DataForm } from "./data-form";
 import { applyManualInjections, getDirtyValues } from "./get-dirty-values";
 import { IsOverridden } from "./is-overridden";
@@ -1081,6 +1082,7 @@ export const UserConfigForm: React.FC = () => {
         );
       case "runtime":
         return (
+          <>
           <SettingGroup title="Runtime configuration">
             <FormField
               control={form.control}
@@ -1231,6 +1233,15 @@ export const UserConfigForm: React.FC = () => {
               .
             </FormDescription>
           </SettingGroup>
+          <SettingGroup title="Custom wrapped-text wrappers">
+            <WrappedTextAdaptersForm form={form} onSubmit={onSubmit} />
+            <FormDescription>
+              Define wrapper calls like <Kbd className="inline">mo.foo(...)</Kbd>{" "}
+              and choose the syntax language used when editing the wrapped
+              text.
+            </FormDescription>
+          </SettingGroup>
+          </>
         );
       case "ai":
         return <AiConfig form={form} config={config} onSubmit={onSubmit} />;

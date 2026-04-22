@@ -11,3 +11,5 @@ export type {
   ParseResult,
   QuotePrefixKind,
 } from "./types.js";
+export type { WrappedTextParseInfo, WrappedTextParserConfig, WrappedTextShape } from "./parsers/wrapped-text-parser.js";
+export { WrappedTextParser } from "./parsers/wrapped-text-parser.js";

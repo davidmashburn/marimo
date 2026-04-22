@@ -3,6 +3,7 @@ import { z } from "zod";
 import { invariant } from "@/utils/invariant";
 import { Logger } from "@/utils/Logger";
 import type { MarimoConfig, schemas } from "../network/types";
+import { WRAPPED_TEXT_SYNTAX_LANGUAGES } from "@/core/language/wrapped-text-syntax";
 
 // This has to be defined in the same file as the zod schema to satisfy zod
 export const PackageManagerNames = [
@@ -44,6 +45,9 @@ export const DEFAULT_AI_MODEL = "openai/gpt-4o";
  */
 const AUTO_DOWNLOAD_FORMATS = ["html", "markdown", "ipynb"] as const;
 
+const WRAPPED_TEXT_SHAPES = ["expression", "assignment", "both"] as const;
+const WRAPPED_TEXT_QUOTE_PREFIXES = ["r", "f", "fr", "rf"] as const;
+
 export type CopilotMode = NonNullable<schemas["AiConfig"]["mode"]>;
 export const COPILOT_MODES: CopilotMode[] = ["manual", "ask", "agent"];
 
@@ -54,6 +58,26 @@ const AiConfigSchema = z
     project: z.string().optional(),
   })
   .loose();
+
+const WrappedTextAdapterConfigSchema = z
+  .object({
+    enabled: z.boolean().prefault(true),
+    function_name: z
+      .string()
+      .trim()
+      .regex(
+        /^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)+$/,
+        "Expected a dotted function name like mo.my_wrapper",
+      ),
+    shape: z.enum(WRAPPED_TEXT_SHAPES).prefault("both"),
+    syntax_language: z.enum(WRAPPED_TEXT_SYNTAX_LANGUAGES),
+    default_quote_prefix: z
+      .enum(WRAPPED_TEXT_QUOTE_PREFIXES)
+      .optional()
+      .nullable(),
+    default_assignment_name: z.string().trim().optional().nullable(),
+  })
+  .strict();
 
 const AiModelsSchema = z.object({
   chat_model: z.string().nullish(),
@@ -127,6 +151,9 @@ export const UserConfigSchema = z
           .array(z.enum(AUTO_DOWNLOAD_FORMATS))
           .prefault([]),
         show_tracebacks: z.boolean().prefault(false),
+        wrapped_text_adapters: z
+          .array(WrappedTextAdapterConfigSchema)
+          .prefault([]),
       })
       .prefault({}),
     display: z
@@ -238,6 +265,7 @@ export type LSPConfig = UserConfig["language_servers"];
 export type DiagnosticsConfig = UserConfig["diagnostics"];
 export type DisplayConfig = UserConfig["display"];
 export type AiConfig = UserConfig["ai"];
+export type WrappedTextAdapterConfig = z.infer<typeof WrappedTextAdapterConfigSchema>;
 
 export const AppTitleSchema = z.string();
 export const SqlOutputSchema = z
@@ -334,5 +362,5 @@ export function defaultUserConfig(): UserConfig {
     package_management: {},
     mcp: {},
   };
-  return UserConfigSchema.parse(defaultConfig) as UserConfig;
+  return UserConfigSchema.parse(defaultConfig) as unknown as UserConfig;
 }
