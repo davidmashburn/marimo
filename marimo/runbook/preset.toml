@@ -1,0 +1,50 @@
+# marimo.runbook preset adapters
+# Copy the relevant entries into your project's marimo.toml under
+# [runtime] to enable wrapped-text cell support for each wrapper.
+#
+# Example:
+#   [[runtime.wrapped_text_adapters]]
+#   enabled = true
+#   function_name = "rb.sh"
+#   syntax_language = "bash"
+#   shape = "both"
+#   default_quote_prefix = "r"
+#   default_assignment_name = "result"
+
+[[runtime.wrapped_text_adapters]]
+enabled = true
+function_name = "rb.sh"
+syntax_language = "bash"
+shape = "both"
+default_quote_prefix = "r"
+default_assignment_name = "result"
+
+[[runtime.wrapped_text_adapters]]
+enabled = true
+function_name = "rb.node"
+syntax_language = "javascript"
+shape = "both"
+default_quote_prefix = "r"
+default_assignment_name = "result"
+
+[[runtime.wrapped_text_adapters]]
+enabled = true
+function_name = "rb.mongo"
+syntax_language = "javascript"
+shape = "both"
+default_quote_prefix = "r"
+default_assignment_name = "result"
+
+[[runtime.wrapped_text_adapters]]
+enabled = true
+function_name = "rb.http"
+syntax_language = "bash"
+shape = "expression"
+default_quote_prefix = "r"
+
+[[runtime.wrapped_text_adapters]]
+enabled = true
+function_name = "rb.just"
+syntax_language = "bash"
+shape = "expression"
+default_quote_prefix = "r"
