@@ -288,17 +288,18 @@ def _extract_runbook_commands(
         else:
             continue
 
-        # First positional arg must be a string literal
+        # Collect leading positional string literal arguments.
+        # For rb.http("GET", "https://...") we want both parts joined.
         if not node.args:
             continue
-        first_arg = node.args[0]
-        if isinstance(first_arg, ast.Constant) and isinstance(
-            first_arg.value, str
-        ):
-            # dedent before strip so common indentation is removed first
-            results.append(
-                (wrapper, textwrap.dedent(first_arg.value).strip())
-            )
+        str_parts: list[str] = []
+        for arg in node.args:
+            if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                str_parts.append(textwrap.dedent(arg.value).strip())
+            else:
+                break  # stop at first non-string arg
+        if str_parts:
+            results.append((wrapper, "\n".join(str_parts)))
 
     return results
 
