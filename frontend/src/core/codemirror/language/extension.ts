@@ -28,7 +28,7 @@ import type { PlaceholderType } from "../config/types";
 import { historyCompartment } from "../editing/extensions";
 import { formattingChangeEffect } from "../format";
 import { createPanel } from "../react-dom/createPanel";
-import { getLanguageAdapter, getLanguageAdapters, LanguageAdapters } from "./LanguageAdapters";
+import { getCustomLanguageAdapters, getLanguageAdapter, getLanguageAdapters, LanguageAdapters } from "./LanguageAdapters";
 import { initializeSQLDialect } from "./languages/sql/sql";
 import type { LanguageMetadata } from "./metadata";
 import { languageMetadataField, setLanguageMetadata } from "./metadata";
@@ -246,6 +246,13 @@ export function languageAdapterFromCode(doc: string): LanguageAdapter {
   // Empty doc defaults to Python
   if (!doc) {
     return LanguageAdapters.python;
+  }
+
+  // Check user-registered adapters first (more specific than built-ins)
+  for (const adapter of getCustomLanguageAdapters()) {
+    if (adapter.isSupported(doc)) {
+      return adapter;
+    }
   }
 
   if (LanguageAdapters.markdown.isSupported(doc)) {

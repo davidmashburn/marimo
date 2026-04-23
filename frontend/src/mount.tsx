@@ -25,7 +25,9 @@ import {
   parseAppConfig,
   parseConfigOverrides,
   parseUserConfig,
+  type WrappedTextAdapterConfig,
 } from "./core/config/config-schema";
+import { syncUserWrappedTextAdapters } from "./core/codemirror/language/user-wrapped-text-adapters";
 import { MarimoApp, preloadPage } from "./core/MarimoApp";
 import { type AppMode, initialModeAtom, viewStateAtom } from "./core/mode";
 import { cleanupAuthQueryParams } from "./core/network/auth";
@@ -326,7 +328,14 @@ function initStore(options: unknown) {
     configOverridesAtom,
     parseConfigOverrides(parsedOptions.data.configOverrides),
   );
-  store.set(userConfigAtom, parseUserConfig(parsedOptions.data.config));
+  const parsedUserConfig = parseUserConfig(parsedOptions.data.config);
+  store.set(userConfigAtom, parsedUserConfig);
+  // Register wrapped-text adapters before cells initialize so that
+  // getInitialLanguageAdapter() can detect user-configured adapters.
+  syncUserWrappedTextAdapters(
+    (parsedUserConfig.runtime as { wrapped_text_adapters?: WrappedTextAdapterConfig[] })
+      .wrapped_text_adapters,
+  );
   store.set(appConfigAtom, parseAppConfig(parsedOptions.data.appConfig));
 
   // Runtime config
