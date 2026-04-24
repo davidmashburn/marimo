@@ -25,6 +25,7 @@ from marimo._config.config import (
 )
 from marimo._config.packages import PackageManagerKind
 from marimo._config.reader import (
+    find_nearest_marimo_toml,
     find_nearest_pyproject_toml,
     get_marimo_config_from_pyproject_dict,
     read_marimo_config,
@@ -184,6 +185,27 @@ class ProjectConfigManager(PartialMarimoConfigReader):
 
     def __init__(self, start_path: str) -> None:
         self.pyproject_path = find_nearest_pyproject_toml(start_path)
+        self.marimo_toml_path = find_nearest_marimo_toml(start_path)
+
+    @property
+    def _base_path(self) -> Path | None:
+        """Directory used to resolve relative paths (custom_css, dotenv, ...).
+
+        Prefer the nearer of pyproject.toml / marimo.toml — whichever sits
+        closest to the notebook.
+        """
+        if self.pyproject_path is None:
+            return (
+                self.marimo_toml_path.parent
+                if self.marimo_toml_path is not None
+                else None
+            )
+        if self.marimo_toml_path is None:
+            return self.pyproject_path.parent
+        # Both exist: the one with more path parts is deeper/nearer.
+        if len(self.marimo_toml_path.parts) >= len(self.pyproject_path.parts):
+            return self.marimo_toml_path.parent
+        return self.pyproject_path.parent
 
     # It is safe to cache this config, as we only read from the pyproject.toml
     # and never update it. If the user updates the pyproject.toml,
@@ -191,14 +213,43 @@ class ProjectConfigManager(PartialMarimoConfigReader):
     @lru_cache(maxsize=2)  # noqa: B019
     def get_config(self, *, hide_secrets: bool = True) -> PartialMarimoConfig:
         try:
-            if self.pyproject_path is None:
+            project_config: PartialMarimoConfig = cast(
+                PartialMarimoConfig, {}
+            )
+            if self.pyproject_path is not None:
+                from_pyproject = read_pyproject_marimo_config(
+                    self.pyproject_path
+                )
+                if from_pyproject is not None:
+                    project_config = from_pyproject
+            if self.marimo_toml_path is not None:
+                from_marimo_toml = read_marimo_config(
+                    str(self.marimo_toml_path)
+                )
+                # marimo.toml takes precedence when it sits deeper than
+                # (or at the same level as) the pyproject.toml.
+                if (
+                    self.pyproject_path is None
+                    or len(self.marimo_toml_path.parts)
+                    >= len(self.pyproject_path.parts)
+                ):
+                    project_config = cast(
+                        PartialMarimoConfig,
+                        merge_config(
+                            cast(MarimoConfig, project_config),
+                            from_marimo_toml,
+                        ),
+                    )
+                else:
+                    project_config = cast(
+                        PartialMarimoConfig,
+                        merge_config(
+                            cast(MarimoConfig, from_marimo_toml),
+                            project_config,
+                        ),
+                    )
+            if self._base_path is None:
                 return {}
-            project_config = read_pyproject_marimo_config(self.pyproject_path)
-            if project_config is None:
-                # Some project configuration defaults (dotenv in particular)
-                # are resolved at runtime, even in the absence of marimo
-                # section in the pyproject.toml.
-                project_config = cast(PartialMarimoConfig, {})
             project_config = self._resolve_pythonpath(project_config)
             project_config = self._resolve_dotenv(project_config)
             project_config = self._resolve_custom_css(project_config)
@@ -214,7 +265,8 @@ class ProjectConfigManager(PartialMarimoConfigReader):
     def _resolve_pythonpath(
         self, config: PartialMarimoConfig
     ) -> PartialMarimoConfig:
-        if self.pyproject_path is None:
+        base = self._base_path
+        if base is None:
             return config
 
         if "runtime" not in config:
@@ -229,8 +281,7 @@ class ProjectConfigManager(PartialMarimoConfigReader):
             return config
 
         resolved_pythonpath = [
-            str((self.pyproject_path.parent / path).absolute())
-            for path in pythonpath
+            str((base / path).absolute()) for path in pythonpath
         ]
         return {
             **config,
@@ -243,7 +294,8 @@ class ProjectConfigManager(PartialMarimoConfigReader):
     def _resolve_dotenv(
         self, config: PartialMarimoConfig
     ) -> PartialMarimoConfig:
-        if self.pyproject_path is None:
+        base = self._base_path
+        if base is None:
             return config
 
         runtime = config.get("runtime", cast(RuntimeConfig, {}))
@@ -253,15 +305,15 @@ class ProjectConfigManager(PartialMarimoConfigReader):
             return config
 
         resolved_dotenv = [
-            str((self.pyproject_path.parent / path).absolute())
-            for path in dotenv
+            str((base / path).absolute()) for path in dotenv
         ]
         return {**config, "runtime": {**runtime, "dotenv": resolved_dotenv}}
 
     def _resolve_custom_css(
         self, config: PartialMarimoConfig
     ) -> PartialMarimoConfig:
-        if self.pyproject_path is None:
+        base = self._base_path
+        if base is None:
             return config
 
         if "display" not in config:
@@ -274,8 +326,7 @@ class ProjectConfigManager(PartialMarimoConfigReader):
             return config
 
         resolved_custom_css = [
-            str((self.pyproject_path.parent / path).absolute())
-            for path in custom_css
+            str((base / path).absolute()) for path in custom_css
         ]
         return {
             **config,
@@ -285,7 +336,8 @@ class ProjectConfigManager(PartialMarimoConfigReader):
     def _resolve_vimrc(
         self, config: PartialMarimoConfig
     ) -> PartialMarimoConfig:
-        if self.pyproject_path is None:
+        base = self._base_path
+        if base is None:
             return config
 
         if "keymap" not in config:
@@ -297,7 +349,7 @@ class ProjectConfigManager(PartialMarimoConfigReader):
         if not isinstance(vimrc, str):
             return config
 
-        resolved_vimrc = str((self.pyproject_path.parent / vimrc).absolute())
+        resolved_vimrc = str((base / vimrc).absolute())
         return {
             **config,
             "keymap": {**keymap, "vimrc": resolved_vimrc},

@@ -70,10 +70,23 @@ def find_nearest_pyproject_toml(
     start_path: str | Path,
 ) -> Path | None:
     """Find the nearest pyproject.toml file."""
+    return _find_nearest_file(start_path, "pyproject.toml")
+
+
+def find_nearest_marimo_toml(
+    start_path: str | Path,
+) -> Path | None:
+    """Find the nearest project-level marimo.toml file."""
+    return _find_nearest_file(start_path, "marimo.toml")
+
+
+def _find_nearest_file(
+    start_path: str | Path, filename: str
+) -> Path | None:
     path = Path(start_path)
     root = path.anchor
     try:
-        while not path.joinpath("pyproject.toml").exists():
+        while not path.joinpath(filename).exists():
             if str(path) == root:
                 return None
             if path.parent == path:
@@ -81,4 +94,4 @@ def find_nearest_pyproject_toml(
             path = path.parent
     except OSError:
         return None
-    return path.joinpath("pyproject.toml")
+    return path.joinpath(filename)

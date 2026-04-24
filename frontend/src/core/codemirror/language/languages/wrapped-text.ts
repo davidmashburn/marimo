@@ -61,6 +61,68 @@ export interface RuntimeWrappedTextLanguageAdapterConfig {
   extensions?: Extension[];
 }
 
+interface HttpParserState {
+  // Progression through a single request:
+  // "start"     -> expecting METHOD URL line (or comments/blank)
+  // "headers"   -> expecting header lines (or blank → body)
+  // "body"      -> everything after the blank separator
+  phase: "start" | "headers" | "body";
+  // Whether we've already emitted METHOD on the current request line
+  startedRequestLine: boolean;
+  // Whether we've already emitted the header key on the current line
+  startedHeader: boolean;
+}
+
+const httpStreamParser: StreamParser<HttpParserState> = {
+  startState: () => ({
+    phase: "start",
+    startedRequestLine: false,
+    startedHeader: false,
+  }),
+  token: (stream, state) => {
+    if (stream.sol()) {
+      state.startedRequestLine = false;
+      state.startedHeader = false;
+    }
+    if (stream.eatSpace()) {
+      return null;
+    }
+    if (stream.match(/^(#|\/\/).*/)) {
+      return "comment";
+    }
+    if (stream.sol() && stream.match(/^\s*$/, false)) {
+      stream.skipToEnd();
+      if (state.phase === "headers") {
+        state.phase = "body";
+      }
+      return null;
+    }
+    if (state.phase === "start") {
+      if (!state.startedRequestLine && stream.match(/^[A-Z]+(?=\s)/)) {
+        state.startedRequestLine = true;
+        return "keyword";
+      }
+      // URL runs to end of line
+      stream.skipToEnd();
+      state.phase = "headers";
+      return "string.special";
+    }
+    if (state.phase === "headers") {
+      if (!state.startedHeader && stream.match(/^[A-Za-z][A-Za-z0-9-]*(?=\s*:)/)) {
+        state.startedHeader = true;
+        return "propertyName";
+      }
+      if (state.startedHeader && stream.match(/^:/)) {
+        return "punctuation";
+      }
+      stream.skipToEnd();
+      return "string";
+    }
+    stream.skipToEnd();
+    return null;
+  },
+};
+
 const streamParsers: Record<
   Exclude<RuntimeWrappedTextSyntaxLanguage, "markdown" | "md">,
   StreamParser<unknown>
@@ -75,6 +137,7 @@ const streamParsers: Record<
   go,
   golang: go,
   html,
+  http: httpStreamParser,
   javascript,
   js: javascript,
   json,

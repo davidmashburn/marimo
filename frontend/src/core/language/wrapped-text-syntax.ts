@@ -11,6 +11,7 @@ export const WRAPPED_TEXT_SYNTAX_LANGUAGES = [
   "go",
   "golang",
   "html",
+  "http",
   "javascript",
   "js",
   "json",

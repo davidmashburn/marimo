@@ -1,0 +1,14 @@
+# Wrapped-text adapter registration for this example.
+#
+# Enables the "smart cell" UI for sh() — the editor switches to a bash code
+# editor with syntax highlighting, and the cell gets a smart-cell panel
+# toggle. Adapt `function_name` to whatever wrapper(s) you define in your
+# own notebook.
+
+[[runtime.wrapped_text_adapters]]
+enabled = true
+function_name = "sh"
+syntax_language = "bash"
+shape = "both"
+default_quote_prefix = "r"
+default_assignment_name = "result"

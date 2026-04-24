@@ -1,7 +1,7 @@
 /* Copyright 2026 Marimo. All rights reserved. */
 import type { EditorView } from "@codemirror/view";
 import type { QuotePrefixKind } from "@marimo-team/smart-cells";
-import { InfoIcon, PaintRollerIcon } from "lucide-react";
+import { InfoIcon, PaintRollerIcon, SparklesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
@@ -10,7 +10,8 @@ import { type ConnectionName, DUCKDB_ENGINE } from "@/core/datasets/engines";
 import { useAutoGrowInputProps } from "@/hooks/useAutoGrowInputProps";
 import { cellIdState } from "../../cells/state";
 import { formatSQL } from "../../format";
-import { languageAdapterState } from "../extension";
+import { getCustomLanguageAdapters } from "../LanguageAdapters";
+import { languageAdapterState, requestLanguageSwitch } from "../extension";
 import { MarkdownLanguageAdapter } from "../languages/markdown";
 import {
   SQLLanguageAdapter,
@@ -187,6 +188,31 @@ export const LanguagePanelComponent: React.FC<{
         </Tooltip>
       </div>
     );
+  }
+
+  // When in Python mode, offer a one-click switch to any wrapped-text
+  // adapter whose parser recognizes the current code.
+  if (languageAdapter.type === "python") {
+    const code = view.state.doc.toString();
+    const matchingAdapter = getCustomLanguageAdapters().find((a) =>
+      a.isSupported(code),
+    );
+    if (matchingAdapter) {
+      actions = (
+        <Tooltip content={`Render as ${matchingAdapter.type} cell`}>
+          <Button
+            variant="text"
+            size="xs"
+            className="gap-1"
+            onClick={() => requestLanguageSwitch(view, matchingAdapter)}
+          >
+            <SparklesIcon className="h-3 w-3" />
+            <span>Smart cell: {matchingAdapter.type}</span>
+          </Button>
+        </Tooltip>
+      );
+      showDivider = true;
+    }
   }
 
   return (

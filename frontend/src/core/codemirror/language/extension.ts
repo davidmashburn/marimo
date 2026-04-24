@@ -28,7 +28,12 @@ import type { PlaceholderType } from "../config/types";
 import { historyCompartment } from "../editing/extensions";
 import { formattingChangeEffect } from "../format";
 import { createPanel } from "../react-dom/createPanel";
-import { getCustomLanguageAdapters, getLanguageAdapter, getLanguageAdapters, LanguageAdapters } from "./LanguageAdapters";
+import {
+  getCustomLanguageAdapters,
+  getLanguageAdapter,
+  getLanguageAdapters,
+  LanguageAdapters,
+} from "./LanguageAdapters";
 import { initializeSQLDialect } from "./languages/sql/sql";
 import type { LanguageMetadata } from "./metadata";
 import { languageMetadataField, setLanguageMetadata } from "./metadata";
@@ -62,43 +67,74 @@ export const languageAdapterState = StateField.define<LanguageAdapter>({
     }
     return value;
   },
-  // Only show the panel if the language is not python
   provide: (field) =>
-    showPanel.from(field, (value) => {
-      if (value.type === "python") {
-        return null;
-      }
+    showPanel.from(field, () => {
+      // Always show the language panel so users can always see which language
+      // the cell is in and have a visible path to switch (e.g. back to a
+      // smart-cell wrapped-text view when a custom adapter matches the code).
       return (view) => createPanel(view, LanguagePanelComponent);
     }),
 });
 
 /**
+ * Switch to a different language adapter, performing the code transform.
+ * Used by the language panel UI to offer an explicit way back to a
+ * wrapped-text (smart) cell from Python mode.
+ */
+export function requestLanguageSwitch(
+  view: EditorView,
+  nextLanguage: LanguageAdapter,
+  opts: { keepCodeAsIs?: boolean } = {},
+): void {
+  const currentLanguage = view.state.field(languageAdapterState);
+  if (currentLanguage.type === nextLanguage.type) {
+    return;
+  }
+  updateLanguageAdapterAndCode({
+    view,
+    nextLanguage,
+    opts: { keepCodeAsIs: opts.keepCodeAsIs ?? false },
+  });
+}
+
+/**
  * Keymap to toggle between languages
  */
 function languageToggleKeymaps() {
-  const languages = getLanguageAdapters();
-  // Cycle through the language to find the next one that supports the code
-  const findNextLanguage = (code: string, index: number): LanguageAdapter => {
-    const language = languages[index % languages.length];
-    if (language.isSupported(code)) {
-      return language;
-    }
-    return findNextLanguage(code, index + 1);
-  };
-
   return [
     keymap.of([
       {
         key: "F4",
         preventDefault: true,
         run: (cm) => {
-          // Find the next language
+          // Resolve languages fresh on each press so newly-registered
+          // user adapters (wrapped-text) are reachable from Python mode.
+          const languages = getLanguageAdapters();
+          const findNextLanguage = (
+            code: string,
+            index: number,
+            seen: number,
+          ): LanguageAdapter => {
+            if (seen >= languages.length) {
+              return languages[index % languages.length];
+            }
+            const language = languages[index % languages.length];
+            if (language.isSupported(code)) {
+              return language;
+            }
+            return findNextLanguage(code, index + 1, seen + 1);
+          };
+
           const currentLanguage = cm.state.field(languageAdapterState);
           const currentLanguageIndex = languages.findIndex(
             (l) => l.type === currentLanguage.type,
           );
           const code = cm.state.doc.toString();
-          const nextLanguage = findNextLanguage(code, currentLanguageIndex + 1);
+          const nextLanguage = findNextLanguage(
+            code,
+            currentLanguageIndex + 1,
+            0,
+          );
 
           if (currentLanguage === nextLanguage) {
             return false;
