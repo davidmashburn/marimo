@@ -3,7 +3,7 @@ import { z } from "zod";
 import { invariant } from "@/utils/invariant";
 import { Logger } from "@/utils/Logger";
 import type { MarimoConfig, schemas } from "../network/types";
-import { WRAPPED_TEXT_SYNTAX_LANGUAGES } from "@/core/language/wrapped-text-syntax";
+import { isValidWrappedTextSyntaxLanguage } from "@/core/language/wrapped-text-syntax";
 
 // This has to be defined in the same file as the zod schema to satisfy zod
 export const PackageManagerNames = [
@@ -70,7 +70,12 @@ const WrappedTextAdapterConfigSchema = z
         "Expected a dotted function name like mo.my_wrapper",
       ),
     shape: z.enum(WRAPPED_TEXT_SHAPES).prefault("both"),
-    syntax_language: z.enum(WRAPPED_TEXT_SYNTAX_LANGUAGES),
+    syntax_language: z
+      .string()
+      .refine(isValidWrappedTextSyntaxLanguage, {
+        message:
+          "Unknown syntax_language: use a key from @uiw/codemirror-extensions-langs, http, dockerfile, or a legacy alias (e.g. python, javascript, mysql)",
+      }),
     default_quote_prefix: z
       .enum(WRAPPED_TEXT_QUOTE_PREFIXES)
       .optional()

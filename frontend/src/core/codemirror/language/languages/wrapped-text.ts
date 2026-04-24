@@ -1,54 +1,41 @@
 /* Copyright 2026 Marimo. All rights reserved. */
 
 import { insertTab } from "@codemirror/commands";
-import { markdown } from "@codemirror/lang-markdown";
-import { css, less, sCSS } from "@codemirror/legacy-modes/mode/css";
-import { dockerFile } from "@codemirror/legacy-modes/mode/dockerfile";
-import { go } from "@codemirror/legacy-modes/mode/go";
-import {
-  javascript,
-  json,
-  typescript,
-} from "@codemirror/legacy-modes/mode/javascript";
-import { powerShell } from "@codemirror/legacy-modes/mode/powershell";
-import { python } from "@codemirror/legacy-modes/mode/python";
-import { ruby } from "@codemirror/legacy-modes/mode/ruby";
-import { rust } from "@codemirror/legacy-modes/mode/rust";
-import { shell } from "@codemirror/legacy-modes/mode/shell";
-import {
-  mySQL,
-  pgSQL,
-  sqlite,
-  standardSQL,
-} from "@codemirror/legacy-modes/mode/sql";
-import { toml } from "@codemirror/legacy-modes/mode/toml";
-import { html, xml } from "@codemirror/legacy-modes/mode/xml";
-import { yaml } from "@codemirror/legacy-modes/mode/yaml";
 import { StreamLanguage, type StreamParser } from "@codemirror/language";
 import type { Extension } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
+import { dockerFile } from "@codemirror/legacy-modes/mode/dockerfile";
+import {
+  type LanguageName,
+  loadLanguage,
+} from "@uiw/codemirror-extensions-langs";
 import {
   type QuotePrefixKind,
   type WrappedTextShape,
   WrappedTextParser,
 } from "@marimo-team/smart-cells";
 import type { CellId } from "@/core/cells/ids";
+import { resolveWrappedTextSyntaxLanguage } from "@/core/language/wrapped-text-syntax";
 import type { CompletionConfig } from "@/core/config/config-schema";
 import type { HotkeyProvider } from "@/core/hotkeys/hotkeys";
-import {
-  WRAPPED_TEXT_SYNTAX_LANGUAGES,
-  type WrappedTextSyntaxLanguage,
-} from "@/core/language/wrapped-text-syntax";
+import type { WrappedTextSyntaxLanguage } from "@/core/language/wrapped-text-syntax";
 import type { PlaceholderType } from "../../config/types";
 import type { LanguageAdapter, LanguageAdapterType } from "../types";
+
+export type RuntimeWrappedTextSyntaxLanguage = WrappedTextSyntaxLanguage;
+
+export {
+  getAllWrappedTextSyntaxLanguageIds,
+  /** @deprecated Use {@link getAllWrappedTextSyntaxLanguageIds}. */
+  getAllWrappedTextSyntaxLanguageIds as getRuntimeWrappedTextSyntaxLanguages,
+  getRuntimeWrappedTextSyntaxLanguageList,
+} from "@/core/language/wrapped-text-syntax";
 
 export interface RuntimeWrappedTextMetadata {
   assignmentName: string | null;
   quotePrefix: QuotePrefixKind;
   kwargs: Array<{ key: string; value: string }>;
 }
-
-export type RuntimeWrappedTextSyntaxLanguage = WrappedTextSyntaxLanguage;
 
 export interface RuntimeWrappedTextLanguageAdapterConfig {
   type: LanguageAdapterType;
@@ -57,19 +44,13 @@ export interface RuntimeWrappedTextLanguageAdapterConfig {
   defaultCode?: string;
   defaultQuotePrefix?: QuotePrefixKind;
   defaultAssignmentName?: string | null;
-  syntaxLanguage?: RuntimeWrappedTextSyntaxLanguage;
+  syntaxLanguage?: string;
   extensions?: Extension[];
 }
 
 interface HttpParserState {
-  // Progression through a single request:
-  // "start"     -> expecting METHOD URL line (or comments/blank)
-  // "headers"   -> expecting header lines (or blank → body)
-  // "body"      -> everything after the blank separator
   phase: "start" | "headers" | "body";
-  // Whether we've already emitted METHOD on the current request line
   startedRequestLine: boolean;
-  // Whether we've already emitted the header key on the current line
   startedHeader: boolean;
 }
 
@@ -102,7 +83,6 @@ const httpStreamParser: StreamParser<HttpParserState> = {
         state.startedRequestLine = true;
         return "keyword";
       }
-      // URL runs to end of line
       stream.skipToEnd();
       state.phase = "headers";
       return "string.special";
@@ -123,59 +103,25 @@ const httpStreamParser: StreamParser<HttpParserState> = {
   },
 };
 
-const streamParsers: Record<
-  Exclude<RuntimeWrappedTextSyntaxLanguage, "markdown" | "md">,
-  StreamParser<unknown>
-> = {
-  bash: shell,
-  sh: shell,
-  shell,
-  css,
-  scss: sCSS,
-  less,
-  dockerfile: dockerFile,
-  go,
-  golang: go,
-  html,
-  http: httpStreamParser,
-  javascript,
-  js: javascript,
-  json,
-  mysql: mySQL,
-  postgres: pgSQL,
-  postgresql: pgSQL,
-  powershell: powerShell,
-  ps1: powerShell,
-  py: python,
-  python,
-  rb: ruby,
-  ruby,
-  rs: rust,
-  rust,
-  sqlite,
-  sql: standardSQL,
-  toml,
-  ts: typescript,
-  typescript,
-  xml,
-  yaml,
-  yml: yaml,
-};
-
-export function getRuntimeWrappedTextSyntaxLanguages() {
-  return [...WRAPPED_TEXT_SYNTAX_LANGUAGES];
-}
-
-function getSyntaxExtension(
-  syntaxLanguage: RuntimeWrappedTextSyntaxLanguage | undefined,
-): Extension[] {
-  if (!syntaxLanguage) {
+function getSyntaxExtension(syntaxLanguage: string | undefined): Extension[] {
+  if (syntaxLanguage === undefined || syntaxLanguage.length === 0) {
     return [];
   }
-  if (syntaxLanguage === "markdown" || syntaxLanguage === "md") {
-    return [markdown()];
+  const resolved = resolveWrappedTextSyntaxLanguage(syntaxLanguage);
+  if (resolved === null) {
+    return [];
   }
-  return [StreamLanguage.define(streamParsers[syntaxLanguage])];
+  if (resolved === "http") {
+    return [StreamLanguage.define(httpStreamParser)];
+  }
+  if (resolved === "dockerfile") {
+    return [StreamLanguage.define(dockerFile)];
+  }
+  const ext = loadLanguage(resolved as LanguageName);
+  if (!ext) {
+    return [];
+  }
+  return [ext];
 }
 
 function createDefaultCode(

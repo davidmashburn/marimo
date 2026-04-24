@@ -3,9 +3,9 @@
 import type { WrappedTextShape } from "@marimo-team/smart-cells";
 import { Logger } from "@/utils/Logger";
 import type { WrappedTextAdapterConfig } from "@/core/config/config-schema";
+import { isValidWrappedTextSyntaxLanguage } from "@/core/language/wrapped-text-syntax";
 import {
   createRuntimeWrappedTextLanguageAdapter,
-  getRuntimeWrappedTextSyntaxLanguages,
   registerLanguageAdapter,
   RESERVED_WRAPPED_TEXT_FUNCTION_NAMES,
   unregisterLanguageAdapter,
@@ -19,8 +19,6 @@ const USER_ADAPTER_TYPE_PREFIX = "wrapped-text:";
 const RESERVED_FUNCTION_NAMES = new Set<string>(
   RESERVED_WRAPPED_TEXT_FUNCTION_NAMES,
 );
-const VALID_SYNTAX_LANGUAGES = new Set(getRuntimeWrappedTextSyntaxLanguages());
-
 const managedAdapterTypes = new Set<LanguageAdapterType>();
 
 function getAdapterType(functionName: string): LanguageAdapterType {
@@ -38,10 +36,10 @@ function isEnabled(spec: WrappedTextAdapterConfig): boolean {
 function getSyntaxLanguage(
   syntaxLanguage: string,
 ): RuntimeWrappedTextSyntaxLanguage | null {
-  if (!VALID_SYNTAX_LANGUAGES.has(syntaxLanguage as RuntimeWrappedTextSyntaxLanguage)) {
+  if (!isValidWrappedTextSyntaxLanguage(syntaxLanguage)) {
     return null;
   }
-  return syntaxLanguage as RuntimeWrappedTextSyntaxLanguage;
+  return syntaxLanguage;
 }
 
 function sanitizeShape(shape: string): WrappedTextShape {
