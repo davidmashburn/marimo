@@ -153,7 +153,7 @@ export interface AiCompletion {
 }
 
 /**
- * Extracts code blocks (delimited by triple backticks) and their language ("python", "sql", "markdown").
+ * Extracts code blocks (delimited by triple backticks) and their language.
  * Defaults to "python" if no language is specified or no code blocks are found.
  * Returns an array of AiCompletion objects.
  */
@@ -180,12 +180,7 @@ export function codeToCells(code: string): AiCompletion[] {
       const firstSpace = remaining.indexOf(" ");
       const language =
         firstSpace === -1 ? remaining : remaining.slice(0, firstSpace);
-      const finalLanguage =
-        language === "markdown"
-          ? "markdown"
-          : language === "sql"
-            ? "sql"
-            : "python";
+      const finalLanguage = languageToCellType(language);
       // Extract code after the language identifier
       const codeContent =
         firstSpace === -1 ? "" : remaining.slice(firstSpace + 1);
@@ -196,12 +191,7 @@ export function codeToCells(code: string): AiCompletion[] {
     }
 
     let language = code.slice(openIndex + 3, newlineIndex).trim() || "";
-    language =
-      language === "markdown"
-        ? "markdown"
-        : language === "sql"
-          ? "sql"
-          : "python";
+    language = languageToCellType(language);
     const codeStart = newlineIndex + 1;
 
     const closeIndex = code.indexOf("```", codeStart);
@@ -236,4 +226,19 @@ export function codeToCells(code: string): AiCompletion[] {
   }
 
   return cells;
+}
+
+function languageToCellType(language: string): LanguageAdapterType {
+  switch (language.toLowerCase()) {
+    case "markdown":
+      return "markdown";
+    case "sql":
+      return "sql";
+    case "sh":
+    case "shell":
+    case "bash":
+      return "shell";
+    default:
+      return "python";
+  }
 }

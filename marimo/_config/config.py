@@ -122,6 +122,31 @@ Theme = Literal["light", "dark", "system"]
 ExportType = Literal["html", "markdown", "ipynb"]
 SqlOutputType = Literal["polars", "lazy-polars", "pandas", "native", "auto"]
 StoreKey = Literal["file", "redis", "rest", "tiered"]
+WrappedTextShape = Literal["expression", "assignment", "both"]
+WrappedTextQuotePrefix = Literal["r", "f", "fr", "rf"]
+
+
+@mddoc
+@dataclass
+class WrappedTextAdapterConfig(TypedDict, total=False):
+    """Configuration for custom wrapped-text cell adapters.
+
+    **Keys.**
+
+    - `enabled`: if `True`, the adapter is active in the editor
+    - `function_name`: dotted function name (for example, `mo.node`)
+    - `shape`: allowed wrapper shape: expression, assignment, or both
+    - `syntax_language`: syntax language used for highlighting
+    - `default_quote_prefix`: default quote prefix for generated wrappers
+    - `default_assignment_name`: optional default assignment variable name
+    """
+
+    enabled: NotRequired[bool]
+    function_name: str
+    shape: NotRequired[WrappedTextShape]
+    syntax_language: str
+    default_quote_prefix: NotRequired[WrappedTextQuotePrefix | None]
+    default_assignment_name: NotRequired[str | None]
 
 
 @mddoc
@@ -172,6 +197,8 @@ class RuntimeConfig(TypedDict):
     - `show_tracebacks`: if `True`, show detailed error tracebacks in run mode.
         When enabled, exceptions will display a clickable toast that opens a modal with the full traceback.
         The default is `False`.
+    - `wrapped_text_adapters`: custom wrapped-text adapter definitions used by
+        the editor for function wrappers and syntax highlighting.
     """
 
     auto_instantiate: bool
@@ -188,6 +215,7 @@ class RuntimeConfig(TypedDict):
     default_auto_download: NotRequired[list[ExportType]]
     default_csv_encoding: NotRequired[str]
     show_tracebacks: NotRequired[bool]
+    wrapped_text_adapters: NotRequired[list[WrappedTextAdapterConfig]]
 
 
 @mddoc
@@ -729,6 +757,7 @@ DEFAULT_CONFIG: MarimoConfig = {
         "default_sql_output": "auto",
         "default_csv_encoding": "utf-8",
         "show_tracebacks": False,
+        "wrapped_text_adapters": [],
     },
     "save": {
         "autosave": "after_delay",

@@ -50,6 +50,7 @@ const description: ToolDescription = {
     For adding code, use the following guidelines:
     - Markdown cells: use mo.md(f"""{content}""") function to insert content.
     - SQL cells: use mo.sql(f"""{content}""") function to insert content. If a database engine is specified, use mo.sql(f"""{content}""", engine=engine) instead.
+    - Shell cells: use mo.sh(r"""{content}""") function to insert content.
 
     Returns:
     - A result object containing standard tool metadata.`,

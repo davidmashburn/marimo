@@ -338,6 +338,10 @@ df_name = mo.sql(f"""{SQL_QUERY}""")
 mo.md(f"""{MARKDOWN_CONTENT}""")
 ```
 
+```shell
+mo.sh(r"""{SHELL_SCRIPT}""")
+```
+
 You can have multiple cells of any type. Each cell is wrapped in backticks with the appropriate language identifier.
 Create clear variable names if they will be used in other cells. Do not prefix with underscore.
 Separate logic into multiple cells to keep the code organized and readable.
@@ -370,4 +374,4 @@ Separate logic into multiple cells to keep the code organized and readable.
   - value_preview: <Model object>
 
 
-Again, just output code wrapped in cells. Each cell is wrapped in backticks with the appropriate language identifier (python, sql, markdown).
+Again, just output code wrapped in cells. Each cell is wrapped in backticks with the appropriate language identifier (python, sql, markdown, shell).

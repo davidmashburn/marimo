@@ -38,4 +38,28 @@ export interface LanguageAdapter<M = Record<string, any>> {
 export type LanguageMetadataOf<T extends LanguageAdapter> =
   T extends LanguageAdapter<infer M> ? M : never;
 
-export type LanguageAdapterType = "python" | "markdown" | "sql";
+export type BuiltInLanguageAdapterType =
+  | "python"
+  | "markdown"
+  | "sql"
+  | "shell";
+export type LanguageAdapterType =
+  | BuiltInLanguageAdapterType
+  | (string & {});
+
+export function isBuiltInLanguageAdapterType(
+  type: LanguageAdapterType,
+): type is BuiltInLanguageAdapterType {
+  return (
+    type === "python" ||
+    type === "markdown" ||
+    type === "sql" ||
+    type === "shell"
+  );
+}
+
+export function asBuiltInLanguageAdapterType(
+  type: LanguageAdapterType,
+): BuiltInLanguageAdapterType {
+  return isBuiltInLanguageAdapterType(type) ? type : "python";
+}

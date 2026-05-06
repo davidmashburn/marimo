@@ -28,7 +28,12 @@ import type { PlaceholderType } from "../config/types";
 import { historyCompartment } from "../editing/extensions";
 import { formattingChangeEffect } from "../format";
 import { createPanel } from "../react-dom/createPanel";
-import { getLanguageAdapters, LanguageAdapters } from "./LanguageAdapters";
+import {
+  getCustomLanguageAdapters,
+  getLanguageAdapter,
+  getLanguageAdapters,
+  LanguageAdapters,
+} from "./LanguageAdapters";
 import { initializeSQLDialect } from "./languages/sql/sql";
 import type { LanguageMetadata } from "./metadata";
 import { languageMetadataField, setLanguageMetadata } from "./metadata";
@@ -254,6 +259,14 @@ export function languageAdapterFromCode(doc: string): LanguageAdapter {
   if (LanguageAdapters.sql.isSupported(doc)) {
     return LanguageAdapters.sql;
   }
+  if (LanguageAdapters.shell.isSupported(doc)) {
+    return LanguageAdapters.shell;
+  }
+  for (const adapter of getCustomLanguageAdapters()) {
+    if (adapter.isSupported(doc)) {
+      return adapter;
+    }
+  }
 
   return LanguageAdapters.python;
 }
@@ -282,7 +295,7 @@ export function switchLanguage(
 
   updateLanguageAdapterAndCode({
     view,
-    nextLanguage: LanguageAdapters[opts.language],
+    nextLanguage: getLanguageAdapter(opts.language),
     opts: {
       keepCodeAsIs: opts.keepCodeAsIs ?? false,
     },

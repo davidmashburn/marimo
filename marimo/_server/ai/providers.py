@@ -915,7 +915,7 @@ async def without_wrapping_backticks(
     chunks = merge_backticks(chunks)
 
     # Supported language identifiers
-    langs = ["python", "sql", "markdown"]
+    langs = ["python", "sql", "markdown", "shell"]
 
     first_chunk = True
     buffer: str | None = None

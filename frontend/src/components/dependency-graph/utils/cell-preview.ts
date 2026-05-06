@@ -1,14 +1,19 @@
 /* Copyright 2026 Marimo. All rights reserved. */
 
-import { MarkdownParser, SQLParser } from "@marimo-team/smart-cells";
+import {
+  MarkdownParser,
+  ShellParser,
+  SQLParser,
+} from "@marimo-team/smart-cells";
 
 export interface CellPreview {
   text: string | undefined;
-  type: "python" | "markdown" | "sql";
+  type: "python" | "markdown" | "sql" | "shell";
 }
 
 const markdownParser = new MarkdownParser();
 const sqlParser = new SQLParser();
+const shellParser = new ShellParser();
 
 function firstNonEmptyLine(content: string): string | undefined {
   for (const line of content.split("\n")) {
@@ -23,7 +28,8 @@ function firstNonEmptyLine(content: string): string | undefined {
 /**
  * Extract a human-readable preview and cell type from raw cell code.
  *
- * For markdown cells (`mo.md(...)`) and SQL cells (`mo.sql(...)`),
+ * For markdown cells (`mo.md(...)`), SQL cells (`mo.sql(...)`), and
+ * shell cells (`mo.sh(...)`),
  * returns the inner content's first non-empty line instead of the
  * Python wrapper boilerplate.
  */
@@ -38,6 +44,11 @@ export function extractCellPreview(code: string): CellPreview {
   if (sqlParser.isSupported(trimmed)) {
     const { code: inner } = sqlParser.transformIn(trimmed);
     return { text: firstNonEmptyLine(inner), type: "sql" };
+  }
+
+  if (shellParser.isSupported(trimmed)) {
+    const { code: inner } = shellParser.transformIn(trimmed);
+    return { text: firstNonEmptyLine(inner), type: "shell" };
   }
 
   // Python fallback: first line of raw code

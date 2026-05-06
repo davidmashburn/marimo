@@ -109,6 +109,22 @@ describe("extractCellPreview", () => {
     });
   });
 
+  describe("Shell cells", () => {
+    it("extracts shell from expression cells", () => {
+      expect(extractCellPreview('mo.sh(r"""echo hello""")')).toEqual({
+        text: "echo hello",
+        type: "shell",
+      });
+    });
+
+    it("extracts shell from assignment cells", () => {
+      expect(extractCellPreview('result = mo.sh(r"""echo hello""")')).toEqual({
+        text: "echo hello",
+        type: "shell",
+      });
+    });
+  });
+
   describe("Python fallback", () => {
     it("returns first line of Python code", () => {
       expect(extractCellPreview("import pandas as pd")).toEqual({

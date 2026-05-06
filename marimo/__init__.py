@@ -59,6 +59,7 @@ __all__ = [  # noqa: RUF022
     "mermaid",
     "mpl",
     "nav_menu",
+    "node",
     "notebook_dir",
     "notebook_location",
     "outline",
@@ -75,6 +76,7 @@ __all__ = [  # noqa: RUF022
     "routes",
     "running_in_notebook",
     "show_code",
+    "sh",
     "sidebar",
     "sql",
     "stat",
@@ -145,6 +147,7 @@ from marimo._runtime.runtime import (
     query_params,
     refs,
 )
+from marimo._runtime.sh import node, sh
 from marimo._runtime.state import state
 from marimo._runtime.threads import Thread, current_thread
 from marimo._save.save import cache, lru_cache, persistent_cache

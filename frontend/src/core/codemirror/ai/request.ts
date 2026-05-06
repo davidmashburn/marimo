@@ -3,7 +3,10 @@
 import { waitForConnectionOpen } from "@/core/network/connection";
 import type { AiCompletionRequest } from "@/core/network/types";
 import { getRuntimeManager } from "@/core/runtime/config";
-import type { LanguageAdapterType } from "../language/types";
+import {
+  asBuiltInLanguageAdapterType,
+  type LanguageAdapterType,
+} from "../language/types";
 
 /**
  * Request to edit code with AI
@@ -40,7 +43,7 @@ ${opts.codeAfter}
         code: codeWithReplacement,
         selectedText: opts.selection,
         includeOtherCode: "",
-        language: opts.language,
+        language: asBuiltInLanguageAdapterType(opts.language),
       } satisfies AiCompletionRequest),
     },
   );

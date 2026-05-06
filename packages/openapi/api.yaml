@@ -74,6 +74,7 @@ components:
           enum:
           - markdown
           - python
+          - shell
           - sql
         prompt:
           type: string
@@ -155,6 +156,7 @@ components:
           enum:
           - markdown
           - python
+          - shell
           - sql
         prefix:
           type: string
@@ -7057,4 +7059,3 @@ paths:
       summary: Get the auth token for the current session
       tags:
       - auth
-

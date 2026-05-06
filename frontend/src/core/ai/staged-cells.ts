@@ -269,7 +269,7 @@ class CellCreationStream {
     }
   }
 
-  /** Add a marimo import if the cell is SQL or Markdown and we haven't added it yet. */
+  /** Add a marimo import if the cell uses a marimo wrapper. */
   private addMarimoImport(language: LanguageAdapterType) {
     if (this.hasMarimoImport || language === "python") {
       return;
